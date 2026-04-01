@@ -4,6 +4,7 @@ import dev.unityinflow.tokendashboard.api.agentRoutes
 import dev.unityinflow.tokendashboard.api.alertRoutes
 import dev.unityinflow.tokendashboard.api.costRoutes
 import dev.unityinflow.tokendashboard.api.healthRoutes
+import dev.unityinflow.tokendashboard.api.ingestRoutes
 import dev.unityinflow.tokendashboard.api.sessionRoutes
 import dev.unityinflow.tokendashboard.config.AppConfig
 import dev.unityinflow.tokendashboard.db.DatabaseFactory
@@ -81,6 +82,7 @@ fun Application.configureAppWithDb(db: Database) {
 
     routing {
         healthRoutes(db)
+        ingestRoutes(db)
         sessionRoutes(db)
         agentRoutes(db)
         costRoutes(db)
