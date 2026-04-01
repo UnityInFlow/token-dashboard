@@ -8,6 +8,8 @@ import dev.unityinflow.tokendashboard.api.ingestRoutes
 import dev.unityinflow.tokendashboard.api.sessionRoutes
 import dev.unityinflow.tokendashboard.config.AppConfig
 import dev.unityinflow.tokendashboard.db.DatabaseFactory
+import dev.unityinflow.tokendashboard.web.htmxFragments
+import dev.unityinflow.tokendashboard.web.pageRoutes
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -87,5 +89,7 @@ fun Application.configureAppWithDb(db: Database) {
         agentRoutes(db)
         costRoutes(db)
         alertRoutes(db)
+        pageRoutes(db)
+        htmxFragments(db)
     }
 }
