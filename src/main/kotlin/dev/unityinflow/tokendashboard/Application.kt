@@ -8,14 +8,20 @@ import dev.unityinflow.tokendashboard.api.ingestRoutes
 import dev.unityinflow.tokendashboard.api.sessionRoutes
 import dev.unityinflow.tokendashboard.config.AppConfig
 import dev.unityinflow.tokendashboard.db.DatabaseFactory
+import dev.unityinflow.tokendashboard.service.AlertEvaluationService
+import dev.unityinflow.tokendashboard.service.AnomalyDetector
 import dev.unityinflow.tokendashboard.web.htmxFragments
 import dev.unityinflow.tokendashboard.web.pageRoutes
+import dev.unityinflow.tokendashboard.webhook.WebhookDispatcher
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -25,6 +31,9 @@ import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.routing
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Database
 
@@ -41,10 +50,27 @@ fun main() {
 
 fun Application.configureApp(config: AppConfig) {
     val db = DatabaseFactory.init(config.dbPath)
-    configureAppWithDb(db)
+
+    val httpClient = HttpClient(CIO)
+    val webhookDispatcher = WebhookDispatcher(httpClient)
+    val anomalyDetector = AnomalyDetector()
+    val alertService = AlertEvaluationService(db, webhookDispatcher, anomalyDetector)
+
+    val alertScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    alertService.start(alertScope)
+
+    monitor.subscribe(ApplicationStopped) {
+        alertService.stop()
+        httpClient.close()
+    }
+
+    configureAppWithDb(db, alertService)
 }
 
-fun Application.configureAppWithDb(db: Database) {
+fun Application.configureAppWithDb(
+    db: Database,
+    alertEvaluationService: AlertEvaluationService? = null,
+) {
     install(ContentNegotiation) {
         json(
             Json {
