@@ -1,0 +1,17 @@
+services:
+  dashboard:
+    build: .
+    ports:
+      - "8080:8080"
+      - "4317:4317"
+    volumes:
+      - dashboard-data:/data
+    environment:
+      TD_HOST: "0.0.0.0"
+      TD_PORT: "8080"
+      TD_OTLP_PORT: "4317"
+      TD_DB_PATH: "/data/token-dashboard.db"
+    restart: unless-stopped
+
+volumes:
+  dashboard-data:
