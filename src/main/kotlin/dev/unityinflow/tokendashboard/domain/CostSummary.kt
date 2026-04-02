@@ -35,3 +35,11 @@ data class CostTimeseriesPoint(
     val costMicros: Long,
     val callCount: Long,
 )
+
+@Serializable
+data class BurnRate(
+    val tokensPerMinute: Double,
+    val projectedSessionCostMicros: Long,
+    val activeSessions: Long,
+    val windowMinutes: Int,
+)

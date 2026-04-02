@@ -15,17 +15,18 @@ import io.opentelemetry.proto.resource.v1.Resource
 import org.junit.jupiter.api.Test
 
 class OtlpMetricMapperTest {
-
     @Test
     fun `maps resource attributes to agent identity fields`() {
-        val request = buildRequest(
-            resourceAttrs = mapOf(
-                "agent.id" to "my-agent",
-                "agent.name" to "MyAgent",
-                "session.id" to "sess-42",
-            ),
-            metrics = listOf("llm.token.input" to 100L, "llm.token.output" to 50L),
-        )
+        val request =
+            buildRequest(
+                resourceAttrs =
+                    mapOf(
+                        "agent.id" to "my-agent",
+                        "agent.name" to "MyAgent",
+                        "session.id" to "sess-42",
+                    ),
+                metrics = listOf("llm.token.input" to 100L, "llm.token.output" to 50L),
+            )
 
         val records = OtlpMetricMapper.mapToIngestRecords(request)
         records shouldHaveSize 1
@@ -36,13 +37,15 @@ class OtlpMetricMapperTest {
 
     @Test
     fun `falls back to service name and instance id when agent attrs missing`() {
-        val request = buildRequest(
-            resourceAttrs = mapOf(
-                "service.name" to "budget-breaker",
-                "service.instance.id" to "instance-7",
-            ),
-            metrics = listOf("llm.token.input" to 200L, "llm.token.output" to 100L),
-        )
+        val request =
+            buildRequest(
+                resourceAttrs =
+                    mapOf(
+                        "service.name" to "budget-breaker",
+                        "service.instance.id" to "instance-7",
+                    ),
+                metrics = listOf("llm.token.input" to 200L, "llm.token.output" to 100L),
+            )
 
         val records = OtlpMetricMapper.mapToIngestRecords(request)
         records shouldHaveSize 1
@@ -52,10 +55,11 @@ class OtlpMetricMapperTest {
 
     @Test
     fun `skips records with zero input and output tokens`() {
-        val request = buildRequest(
-            resourceAttrs = mapOf("agent.id" to "a1", "agent.name" to "A"),
-            metrics = listOf("llm.latency" to 500L),
-        )
+        val request =
+            buildRequest(
+                resourceAttrs = mapOf("agent.id" to "a1", "agent.name" to "A"),
+                metrics = listOf("llm.latency" to 500L),
+            )
 
         val records = OtlpMetricMapper.mapToIngestRecords(request)
         records.shouldBeEmpty()
@@ -63,11 +67,12 @@ class OtlpMetricMapperTest {
 
     @Test
     fun `extracts model id from data point attributes`() {
-        val request = buildRequest(
-            resourceAttrs = mapOf("agent.id" to "a1", "agent.name" to "A", "session.id" to "s1"),
-            metrics = listOf("llm.token.input" to 300L, "llm.token.output" to 150L),
-            metricAttrs = mapOf("model.id" to "claude-haiku-4-5-20251001"),
-        )
+        val request =
+            buildRequest(
+                resourceAttrs = mapOf("agent.id" to "a1", "agent.name" to "A", "session.id" to "s1"),
+                metrics = listOf("llm.token.input" to 300L, "llm.token.output" to 150L),
+                metricAttrs = mapOf("model.id" to "claude-haiku-4-5-20251001"),
+            )
 
         val records = OtlpMetricMapper.mapToIngestRecords(request)
         records shouldHaveSize 1
@@ -76,15 +81,17 @@ class OtlpMetricMapperTest {
 
     @Test
     fun `maps cache token metrics`() {
-        val request = buildRequest(
-            resourceAttrs = mapOf("agent.id" to "a1", "agent.name" to "A", "session.id" to "s1"),
-            metrics = listOf(
-                "llm.token.input" to 500L,
-                "llm.token.output" to 250L,
-                "llm.token.cache_read" to 1000L,
-                "llm.token.cache_write" to 200L,
-            ),
-        )
+        val request =
+            buildRequest(
+                resourceAttrs = mapOf("agent.id" to "a1", "agent.name" to "A", "session.id" to "s1"),
+                metrics =
+                    listOf(
+                        "llm.token.input" to 500L,
+                        "llm.token.output" to 250L,
+                        "llm.token.cache_read" to 1000L,
+                        "llm.token.cache_write" to 200L,
+                    ),
+            )
 
         val records = OtlpMetricMapper.mapToIngestRecords(request)
         records shouldHaveSize 1
@@ -105,12 +112,13 @@ class OtlpMetricMapperTest {
         metricAttrs: Map<String, String> = emptyMap(),
     ): ExportMetricsServiceRequest {
         val timestampNanos = System.currentTimeMillis() * 1_000_000L
-        val pointAttrs = metricAttrs.map { (k, v) ->
-            KeyValue.newBuilder()
-                .setKey(k)
-                .setValue(AnyValue.newBuilder().setStringValue(v))
-                .build()
-        }
+        val pointAttrs =
+            metricAttrs.map { (k, v) ->
+                KeyValue.newBuilder()
+                    .setKey(k)
+                    .setValue(AnyValue.newBuilder().setStringValue(v))
+                    .build()
+            }
 
         val scopeMetricsBuilder = ScopeMetrics.newBuilder()
         for ((name, value) in metrics) {

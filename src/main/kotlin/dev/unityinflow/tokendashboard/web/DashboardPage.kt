@@ -2,6 +2,7 @@ package dev.unityinflow.tokendashboard.web
 
 import dev.unityinflow.tokendashboard.domain.AgentCostBreakdown
 import dev.unityinflow.tokendashboard.domain.BudgetAlert
+import dev.unityinflow.tokendashboard.domain.BurnRate
 import dev.unityinflow.tokendashboard.domain.CostSummary
 import kotlinx.html.FlowContent
 import kotlinx.html.a
@@ -32,6 +33,13 @@ fun FlowContent.dashboardContent(
         statCard("This Week", formatMicros(summary.thisWeekMicros))
         statCard("This Month", formatMicros(summary.thisMonthMicros))
         statCard("Active Sessions", summary.activeSessions.toString(), sub = "${summary.totalSessions} total")
+    }
+
+    div {
+        attributes["id"] = "burn-rate-container"
+        attributes["hx-get"] = "/htmx/burn-rate"
+        attributes["hx-trigger"] = "load, every 15s"
+        attributes["hx-swap"] = "innerHTML"
     }
 
     div(classes = "grid") {
@@ -141,6 +149,21 @@ private fun buildChartJs(
     sb.appendLine("scales:{y:{beginAtZero:true,ticks:{callback:function(v){return '\$'+v.toFixed(2)}}}}}});")
     sb.appendLine("})();")
     return sb.toString()
+}
+
+fun FlowContent.burnRateContent(burnRate: BurnRate) {
+    div(classes = "grid-stats") {
+        statCard(
+            label = "Burn Rate",
+            value = "${String.format("%.0f", burnRate.tokensPerMinute)} tok/min",
+            sub = "${burnRate.windowMinutes}-min window",
+        )
+        statCard(
+            label = "Projected Hourly Cost",
+            value = formatMicros(burnRate.projectedSessionCostMicros),
+            sub = "based on current rate",
+        )
+    }
 }
 
 fun FlowContent.costChartScript(

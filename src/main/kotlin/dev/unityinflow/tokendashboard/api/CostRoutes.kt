@@ -3,6 +3,7 @@ package dev.unityinflow.tokendashboard.api
 import dev.unityinflow.tokendashboard.db.tables.AgentCallsTable
 import dev.unityinflow.tokendashboard.db.tables.SessionsTable
 import dev.unityinflow.tokendashboard.domain.AgentCostBreakdown
+import dev.unityinflow.tokendashboard.domain.BurnRate
 import dev.unityinflow.tokendashboard.domain.CostSummary
 import dev.unityinflow.tokendashboard.domain.CostTimeseriesPoint
 import dev.unityinflow.tokendashboard.domain.ModelCostBreakdown
@@ -161,6 +162,55 @@ fun Route.costRoutes(db: Database) {
                     results
                 }
             call.respond(points)
+        }
+
+        get("/burn-rate") {
+            val windowMinutes = call.request.queryParameters["window"]?.toIntOrNull() ?: 5
+
+            val burnRate =
+                transaction(db) {
+                    val cutoff =
+                        LocalDateTime.now().minusMinutes(windowMinutes.toLong())
+                            .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+
+                    val activeSessions =
+                        SessionsTable.selectAll()
+                            .where { SessionsTable.endedAt.isNull() }
+                            .count()
+
+                    val stmt =
+                        connection.prepareStatement(
+                            """
+                            SELECT COALESCE(SUM(input_tokens + output_tokens), 0) as total_tokens,
+                                   COALESCE(SUM(cost_micros), 0) as total_cost
+                            FROM agent_calls
+                            WHERE called_at >= ?
+                            """.trimIndent(),
+                            false,
+                        )
+                    stmt.fillParameters(
+                        listOf(Pair(org.jetbrains.exposed.sql.VarCharColumnType(), cutoff)),
+                    )
+                    val rs = stmt.executeQuery()
+                    rs.next()
+                    val totalTokens = rs.getLong(1)
+                    val totalCost = rs.getLong(2)
+
+                    val tokensPerMinute =
+                        if (windowMinutes > 0) totalTokens.toDouble() / windowMinutes else 0.0
+
+                    val costPerMinute =
+                        if (windowMinutes > 0) totalCost.toDouble() / windowMinutes else 0.0
+                    val projectedSessionCostMicros = (costPerMinute * 60).toLong()
+
+                    BurnRate(
+                        tokensPerMinute = tokensPerMinute,
+                        projectedSessionCostMicros = projectedSessionCostMicros,
+                        activeSessions = activeSessions,
+                        windowMinutes = windowMinutes,
+                    )
+                }
+            call.respond(burnRate)
         }
     }
 }

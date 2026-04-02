@@ -49,53 +49,55 @@ class OtlpMetricsReceiverTest {
 
     @Test
     fun `OTLP exporter can push token metrics and they appear in the database`() {
-        val channel = ManagedChannelBuilder.forAddress("localhost", testPort)
-            .usePlaintext()
-            .build()
+        val channel =
+            ManagedChannelBuilder.forAddress("localhost", testPort)
+                .usePlaintext()
+                .build()
 
         try {
             val stub = MetricsServiceGrpc.newBlockingStub(channel)
 
             val timestampNanos = System.currentTimeMillis() * 1_000_000L
 
-            val request = ExportMetricsServiceRequest.newBuilder()
-                .addResourceMetrics(
-                    ResourceMetrics.newBuilder()
-                        .setResource(
-                            Resource.newBuilder()
-                                .addAttributes(stringAttr("agent.id", "test-agent-01"))
-                                .addAttributes(stringAttr("agent.name", "TestOtlpAgent"))
-                                .addAttributes(stringAttr("session.id", "otlp-sess-1")),
-                        )
-                        .addScopeMetrics(
-                            ScopeMetrics.newBuilder()
-                                .addMetrics(
-                                    sumMetric(
-                                        name = "llm.token.input",
-                                        value = 1500,
-                                        timestampNanos = timestampNanos,
-                                        attrs = listOf(stringAttr("model.id", "claude-sonnet-4-20250514")),
+            val request =
+                ExportMetricsServiceRequest.newBuilder()
+                    .addResourceMetrics(
+                        ResourceMetrics.newBuilder()
+                            .setResource(
+                                Resource.newBuilder()
+                                    .addAttributes(stringAttr("agent.id", "test-agent-01"))
+                                    .addAttributes(stringAttr("agent.name", "TestOtlpAgent"))
+                                    .addAttributes(stringAttr("session.id", "otlp-sess-1")),
+                            )
+                            .addScopeMetrics(
+                                ScopeMetrics.newBuilder()
+                                    .addMetrics(
+                                        sumMetric(
+                                            name = "llm.token.input",
+                                            value = 1500,
+                                            timestampNanos = timestampNanos,
+                                            attrs = listOf(stringAttr("model.id", "claude-sonnet-4-20250514")),
+                                        ),
+                                    )
+                                    .addMetrics(
+                                        sumMetric(
+                                            name = "llm.token.output",
+                                            value = 750,
+                                            timestampNanos = timestampNanos,
+                                            attrs = listOf(stringAttr("model.id", "claude-sonnet-4-20250514")),
+                                        ),
+                                    )
+                                    .addMetrics(
+                                        sumMetric(
+                                            name = "llm.latency",
+                                            value = 1200,
+                                            timestampNanos = timestampNanos,
+                                            attrs = emptyList(),
+                                        ),
                                     ),
-                                )
-                                .addMetrics(
-                                    sumMetric(
-                                        name = "llm.token.output",
-                                        value = 750,
-                                        timestampNanos = timestampNanos,
-                                        attrs = listOf(stringAttr("model.id", "claude-sonnet-4-20250514")),
-                                    ),
-                                )
-                                .addMetrics(
-                                    sumMetric(
-                                        name = "llm.latency",
-                                        value = 1200,
-                                        timestampNanos = timestampNanos,
-                                        attrs = emptyList(),
-                                    ),
-                                ),
-                        ),
-                )
-                .build()
+                            ),
+                    )
+                    .build()
 
             stub.export(request)
 
@@ -120,33 +122,35 @@ class OtlpMetricsReceiverTest {
 
     @Test
     fun `OTLP export with no token metrics returns success without creating records`() {
-        val channel = ManagedChannelBuilder.forAddress("localhost", testPort)
-            .usePlaintext()
-            .build()
+        val channel =
+            ManagedChannelBuilder.forAddress("localhost", testPort)
+                .usePlaintext()
+                .build()
 
         try {
             val stub = MetricsServiceGrpc.newBlockingStub(channel)
 
-            val request = ExportMetricsServiceRequest.newBuilder()
-                .addResourceMetrics(
-                    ResourceMetrics.newBuilder()
-                        .setResource(
-                            Resource.newBuilder()
-                                .addAttributes(stringAttr("service.name", "some-service")),
-                        )
-                        .addScopeMetrics(
-                            ScopeMetrics.newBuilder()
-                                .addMetrics(
-                                    sumMetric(
-                                        name = "http.request.count",
-                                        value = 42,
-                                        timestampNanos = System.currentTimeMillis() * 1_000_000L,
-                                        attrs = emptyList(),
+            val request =
+                ExportMetricsServiceRequest.newBuilder()
+                    .addResourceMetrics(
+                        ResourceMetrics.newBuilder()
+                            .setResource(
+                                Resource.newBuilder()
+                                    .addAttributes(stringAttr("service.name", "some-service")),
+                            )
+                            .addScopeMetrics(
+                                ScopeMetrics.newBuilder()
+                                    .addMetrics(
+                                        sumMetric(
+                                            name = "http.request.count",
+                                            value = 42,
+                                            timestampNanos = System.currentTimeMillis() * 1_000_000L,
+                                            attrs = emptyList(),
+                                        ),
                                     ),
-                                ),
-                        ),
-                )
-                .build()
+                            ),
+                    )
+                    .build()
 
             stub.export(request)
 
@@ -159,43 +163,45 @@ class OtlpMetricsReceiverTest {
 
     @Test
     fun `OTLP export supports gen_ai semantic convention metric names`() {
-        val channel = ManagedChannelBuilder.forAddress("localhost", testPort)
-            .usePlaintext()
-            .build()
+        val channel =
+            ManagedChannelBuilder.forAddress("localhost", testPort)
+                .usePlaintext()
+                .build()
 
         try {
             val stub = MetricsServiceGrpc.newBlockingStub(channel)
             val timestampNanos = System.currentTimeMillis() * 1_000_000L
 
-            val request = ExportMetricsServiceRequest.newBuilder()
-                .addResourceMetrics(
-                    ResourceMetrics.newBuilder()
-                        .setResource(
-                            Resource.newBuilder()
-                                .addAttributes(stringAttr("service.name", "budget-breaker"))
-                                .addAttributes(stringAttr("session.id", "gen-ai-sess")),
-                        )
-                        .addScopeMetrics(
-                            ScopeMetrics.newBuilder()
-                                .addMetrics(
-                                    sumMetric(
-                                        name = "gen_ai.client.token.usage.input",
-                                        value = 2000,
-                                        timestampNanos = timestampNanos,
-                                        attrs = listOf(stringAttr("gen_ai.response.model", "claude-opus-4-20250514")),
+            val request =
+                ExportMetricsServiceRequest.newBuilder()
+                    .addResourceMetrics(
+                        ResourceMetrics.newBuilder()
+                            .setResource(
+                                Resource.newBuilder()
+                                    .addAttributes(stringAttr("service.name", "budget-breaker"))
+                                    .addAttributes(stringAttr("session.id", "gen-ai-sess")),
+                            )
+                            .addScopeMetrics(
+                                ScopeMetrics.newBuilder()
+                                    .addMetrics(
+                                        sumMetric(
+                                            name = "gen_ai.client.token.usage.input",
+                                            value = 2000,
+                                            timestampNanos = timestampNanos,
+                                            attrs = listOf(stringAttr("gen_ai.response.model", "claude-opus-4-20250514")),
+                                        ),
+                                    )
+                                    .addMetrics(
+                                        sumMetric(
+                                            name = "gen_ai.client.token.usage.output",
+                                            value = 1000,
+                                            timestampNanos = timestampNanos,
+                                            attrs = listOf(stringAttr("gen_ai.response.model", "claude-opus-4-20250514")),
+                                        ),
                                     ),
-                                )
-                                .addMetrics(
-                                    sumMetric(
-                                        name = "gen_ai.client.token.usage.output",
-                                        value = 1000,
-                                        timestampNanos = timestampNanos,
-                                        attrs = listOf(stringAttr("gen_ai.response.model", "claude-opus-4-20250514")),
-                                    ),
-                                ),
-                        ),
-                )
-                .build()
+                            ),
+                    )
+                    .build()
 
             stub.export(request)
 
@@ -209,7 +215,10 @@ class OtlpMetricsReceiverTest {
         }
     }
 
-    private fun stringAttr(key: String, value: String): KeyValue =
+    private fun stringAttr(
+        key: String,
+        value: String,
+    ): KeyValue =
         KeyValue.newBuilder()
             .setKey(key)
             .setValue(AnyValue.newBuilder().setStringValue(value))

@@ -5,6 +5,7 @@ import dev.unityinflow.tokendashboard.db.tables.SessionsTable
 import dev.unityinflow.tokendashboard.domain.AgentCostBreakdown
 import dev.unityinflow.tokendashboard.domain.AlertPeriod
 import dev.unityinflow.tokendashboard.domain.BudgetAlert
+import dev.unityinflow.tokendashboard.domain.BurnRate
 import dev.unityinflow.tokendashboard.domain.CostTimeseriesPoint
 import io.ktor.http.ContentType
 import io.ktor.server.response.respondText
@@ -21,6 +22,7 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.sum
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 fun Route.htmxFragments(db: Database) {
@@ -143,6 +145,57 @@ fun Route.htmxFragments(db: Database) {
             val html =
                 createHTML().body {
                     costChartScript(labels, values)
+                }
+            call.respondText(html, ContentType.Text.Html)
+        }
+
+        get("/burn-rate") {
+            val windowMinutes = 5
+
+            val burnRate =
+                transaction(db) {
+                    val cutoffStr =
+                        LocalDateTime.now().minusMinutes(windowMinutes.toLong())
+                            .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+
+                    val activeSessions =
+                        SessionsTable.selectAll()
+                            .where { SessionsTable.endedAt.isNull() }
+                            .count()
+
+                    val stmt =
+                        connection.prepareStatement(
+                            """
+                            SELECT COALESCE(SUM(input_tokens + output_tokens), 0) as total_tokens,
+                                   COALESCE(SUM(cost_micros), 0) as total_cost
+                            FROM agent_calls
+                            WHERE called_at >= ?
+                            """.trimIndent(),
+                            false,
+                        )
+                    stmt.fillParameters(
+                        listOf(Pair(VarCharColumnType(), cutoffStr)),
+                    )
+                    val rs = stmt.executeQuery()
+                    rs.next()
+                    val totalTokens = rs.getLong(1)
+                    val totalCost = rs.getLong(2)
+
+                    val tokensPerMinute = totalTokens.toDouble() / windowMinutes
+                    val costPerMinute = totalCost.toDouble() / windowMinutes
+                    val projectedHourlyCostMicros = (costPerMinute * 60).toLong()
+
+                    BurnRate(
+                        tokensPerMinute = tokensPerMinute,
+                        projectedSessionCostMicros = projectedHourlyCostMicros,
+                        activeSessions = activeSessions,
+                        windowMinutes = windowMinutes,
+                    )
+                }
+
+            val html =
+                createHTML().body {
+                    burnRateContent(burnRate)
                 }
             call.respondText(html, ContentType.Text.Html)
         }

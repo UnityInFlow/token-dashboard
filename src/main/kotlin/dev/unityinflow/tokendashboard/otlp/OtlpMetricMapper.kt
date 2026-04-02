@@ -28,13 +28,14 @@ object OtlpMetricMapper {
                 val metricsByTimestamp = groupMetricsByTimestamp(scopeMetrics.metricsList)
 
                 for ((timestamp, metricGroup) in metricsByTimestamp) {
-                    val record = buildIngestRecord(
-                        metricGroup = metricGroup,
-                        agentId = agentId,
-                        agentName = agentName,
-                        sessionId = sessionId,
-                        timestamp = timestamp,
-                    )
+                    val record =
+                        buildIngestRecord(
+                            metricGroup = metricGroup,
+                            agentId = agentId,
+                            agentName = agentName,
+                            sessionId = sessionId,
+                            timestamp = timestamp,
+                        )
                     if (record != null) {
                         records.add(record)
                     }
@@ -127,15 +128,15 @@ object OtlpMetricMapper {
         if (timeUnixNano == 0L) {
             return LocalDateTime.now().format(TIMESTAMP_FORMATTER)
         }
-        val instant = Instant.ofEpochSecond(
-            TimeUnit.NANOSECONDS.toSeconds(timeUnixNano),
-            timeUnixNano % 1_000_000_000,
-        )
+        val instant =
+            Instant.ofEpochSecond(
+                TimeUnit.NANOSECONDS.toSeconds(timeUnixNano),
+                timeUnixNano % 1_000_000_000,
+            )
         return LocalDateTime.ofInstant(instant, ZoneOffset.UTC).format(TIMESTAMP_FORMATTER)
     }
 
-    private fun List<KeyValue>.toAttributeMap(): Map<String, String> =
-        associate { it.key to it.value.stringValue }
+    private fun List<KeyValue>.toAttributeMap(): Map<String, String> = associate { it.key to it.value.stringValue }
 }
 
 private class MetricGroup {

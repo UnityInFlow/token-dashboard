@@ -13,10 +13,11 @@ class OtlpGrpcServer(
     private var server: Server? = null
 
     fun start() {
-        val grpcServer = ServerBuilder.forPort(port)
-            .addService(metricsReceiver)
-            .build()
-            .start()
+        val grpcServer =
+            ServerBuilder.forPort(port)
+                .addService(metricsReceiver)
+                .build()
+                .start()
 
         server = grpcServer
         logger.info { "OTLP gRPC server started on port $port" }

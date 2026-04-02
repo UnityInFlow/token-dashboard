@@ -7,6 +7,7 @@ import dev.unityinflow.tokendashboard.domain.AgentCostBreakdown
 import dev.unityinflow.tokendashboard.domain.AlertPeriod
 import dev.unityinflow.tokendashboard.domain.BudgetAlert
 import dev.unityinflow.tokendashboard.domain.CostSummary
+import dev.unityinflow.tokendashboard.domain.ModelCostBreakdown
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.html.respondHtml
 import io.ktor.server.response.respondText
@@ -205,6 +206,37 @@ fun Route.pageRoutes(db: Database) {
         call.respondHtml {
             layout("Alerts", "alerts") {
                 alertsContent(alerts)
+            }
+        }
+    }
+
+    get("/models") {
+        val models =
+            transaction(db) {
+                AgentCallsTable
+                    .select(
+                        AgentCallsTable.modelId,
+                        AgentCallsTable.costMicros.sum(),
+                        AgentCallsTable.inputTokens.sum(),
+                        AgentCallsTable.outputTokens.sum(),
+                        AgentCallsTable.id.count(),
+                    )
+                    .groupBy(AgentCallsTable.modelId)
+                    .orderBy(AgentCallsTable.costMicros.sum(), SortOrder.DESC)
+                    .map { row ->
+                        ModelCostBreakdown(
+                            modelId = row[AgentCallsTable.modelId],
+                            totalCostMicros = row[AgentCallsTable.costMicros.sum()] ?: 0L,
+                            totalInputTokens = row[AgentCallsTable.inputTokens.sum()] ?: 0L,
+                            totalOutputTokens = row[AgentCallsTable.outputTokens.sum()] ?: 0L,
+                            callCount = row[AgentCallsTable.id.count()],
+                        )
+                    }
+            }
+
+        call.respondHtml {
+            layout("Models", "models") {
+                modelsContent(models)
             }
         }
     }

@@ -12,7 +12,6 @@ private val logger = KotlinLogging.logger {}
 class OtlpMetricsReceiver(
     private val ingestionService: IngestionService,
 ) : MetricsServiceGrpc.MetricsServiceImplBase() {
-
     override fun export(
         request: ExportMetricsServiceRequest,
         responseObserver: StreamObserver<ExportMetricsServiceResponse>,

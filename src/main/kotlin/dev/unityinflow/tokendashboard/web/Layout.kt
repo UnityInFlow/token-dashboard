@@ -86,6 +86,7 @@ fun HTML.layout(
                 li { a(href = "/", classes = if (activePage == "dashboard") "contrast" else "") { +"Dashboard" } }
                 li { a(href = "/sessions", classes = if (activePage == "sessions") "contrast" else "") { +"Sessions" } }
                 li { a(href = "/agents", classes = if (activePage == "agents") "contrast" else "") { +"Agents" } }
+                li { a(href = "/models", classes = if (activePage == "models") "contrast" else "") { +"Models" } }
                 li { a(href = "/alerts", classes = if (activePage == "alerts") "contrast" else "") { +"Alerts" } }
             }
         }
