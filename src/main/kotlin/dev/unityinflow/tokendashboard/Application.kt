@@ -8,6 +8,9 @@ import dev.unityinflow.tokendashboard.api.ingestRoutes
 import dev.unityinflow.tokendashboard.api.sessionRoutes
 import dev.unityinflow.tokendashboard.config.AppConfig
 import dev.unityinflow.tokendashboard.db.DatabaseFactory
+import dev.unityinflow.tokendashboard.ingestion.IngestionService
+import dev.unityinflow.tokendashboard.otlp.OtlpGrpcServer
+import dev.unityinflow.tokendashboard.otlp.OtlpMetricsReceiver
 import dev.unityinflow.tokendashboard.service.AlertEvaluationService
 import dev.unityinflow.tokendashboard.service.AnomalyDetector
 import dev.unityinflow.tokendashboard.web.htmxFragments
@@ -59,7 +62,13 @@ fun Application.configureApp(config: AppConfig) {
     val alertScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     alertService.start(alertScope)
 
+    val ingestionService = IngestionService(db)
+    val metricsReceiver = OtlpMetricsReceiver(ingestionService)
+    val otlpServer = OtlpGrpcServer(config.otlpGrpcPort, metricsReceiver)
+    otlpServer.start()
+
     monitor.subscribe(ApplicationStopped) {
+        otlpServer.stop()
         alertService.stop()
         httpClient.close()
     }
