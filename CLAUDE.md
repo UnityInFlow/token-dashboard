@@ -10,7 +10,7 @@ Real-time dashboard for AI agent token consumption: burn rate per agent, cost fo
 
 ## Status
 
-Planned — no strict blocking dependencies, but intended to consume data from `budget-breaker` (Tool 05).
+v0.0.1 complete — 99 tests, all features implemented. Pending release tag.
 
 ## Reference Documents
 
