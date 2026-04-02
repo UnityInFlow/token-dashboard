@@ -2,7 +2,6 @@ package dev.unityinflow.tokendashboard.ingestion
 
 import dev.unityinflow.tokendashboard.db.DatabaseFactory
 import dev.unityinflow.tokendashboard.db.tables.ModelCostsTable
-import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.insert
@@ -125,7 +124,7 @@ class CostCalculatorExtendedTest {
     }
 
     @Test
-    fun `handles small token counts without precision loss`() {
+    fun `handles small token counts with integer division`() {
         val db = initTestDb()
         val record = makeRecord(
             "claude-sonnet-4-20250514",
@@ -134,7 +133,8 @@ class CostCalculatorExtendedTest {
         )
 
         val cost = CostCalculator.calculateCostMicros(record, db)
-        // Very small amounts — integer division means some rounding
-        cost shouldBeGreaterThan -1
+        // Sonnet: 100 * 3_000_000 / 1_000_000 = 300 (input)
+        //         50 * 15_000_000 / 1_000_000 = 750 (output)
+        cost shouldBe 1050
     }
 }

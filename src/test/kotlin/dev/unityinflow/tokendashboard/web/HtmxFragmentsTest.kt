@@ -67,13 +67,14 @@ class HtmxFragmentsTest {
         }
 
     @Test
-    fun `sessions-table fragment returns HTML for empty database`() =
+    fun `sessions-table fragment returns empty state message for empty database`() =
         testApplication {
             val db = initTestDb()
             application { configureAppWithDb(db) }
 
             val response = client.get("/htmx/sessions-table")
             response.status shouldBe HttpStatusCode.OK
+            response.bodyAsText() shouldContain "No sessions yet"
         }
 
     @Test
@@ -90,13 +91,14 @@ class HtmxFragmentsTest {
         }
 
     @Test
-    fun `agents-grid fragment returns HTML for empty database`() =
+    fun `agents-grid fragment returns empty state message for empty database`() =
         testApplication {
             val db = initTestDb()
             application { configureAppWithDb(db) }
 
             val response = client.get("/htmx/agents-grid")
             response.status shouldBe HttpStatusCode.OK
+            response.bodyAsText() shouldContain "No agents found"
         }
 
     @Test
@@ -122,13 +124,14 @@ class HtmxFragmentsTest {
         }
 
     @Test
-    fun `alerts-table fragment returns HTML for empty database`() =
+    fun `alerts-table fragment returns empty state message for empty database`() =
         testApplication {
             val db = initTestDb()
             application { configureAppWithDb(db) }
 
             val response = client.get("/htmx/alerts-table")
             response.status shouldBe HttpStatusCode.OK
+            response.bodyAsText() shouldContain "No alerts configured"
         }
 
     @Test

@@ -6,6 +6,7 @@ import dev.unityinflow.tokendashboard.db.tables.AgentCallsTable
 import dev.unityinflow.tokendashboard.db.tables.SessionsTable
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
@@ -97,9 +98,11 @@ class CostRoutesTest {
             val body = response.bodyAsText()
             // Both sessions started today so todayMicros should be 150000
             body shouldContain "150000"
+            // Whitespace-agnostic JSON assertions
+            val compact = body.replace("\\s".toRegex(), "")
             // 1 active session (sess-1 has no endedAt)
-            body shouldContain "\"activeSessions\": 1"
-            body shouldContain "\"totalSessions\": 2"
+            compact shouldContain "\"activeSessions\":1"
+            compact shouldContain "\"totalSessions\":2"
         }
 
     @Test
@@ -172,14 +175,32 @@ class CostRoutesTest {
         }
 
     @Test
-    fun `cost timeseries accepts days parameter`() =
+    fun `cost timeseries days parameter controls query window`() =
         testApplication {
             val db = initTestDb()
             application { configureAppWithDb(db) }
-            seedSessionsAndCalls(db)
 
-            val response = client.get("/api/v1/costs/timeseries?days=30")
-            response.status shouldBe HttpStatusCode.OK
+            // Seed a session 10 days ago
+            val tenDaysAgo = LocalDateTime.now().minusDays(10).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            transaction(db) {
+                SessionsTable.insert {
+                    it[id] = "sess-old"
+                    it[agentId] = "agent-old"
+                    it[agentName] = "Old Agent"
+                    it[startedAt] = tenDaysAgo
+                    it[totalCostMicros] = 50000
+                }
+            }
+
+            // days=30 should include the 10-day-old session
+            val wide = client.get("/api/v1/costs/timeseries?days=30")
+            wide.status shouldBe HttpStatusCode.OK
+            wide.bodyAsText() shouldContain "50000"
+
+            // days=3 should NOT include the 10-day-old session
+            val narrow = client.get("/api/v1/costs/timeseries?days=3")
+            narrow.status shouldBe HttpStatusCode.OK
+            narrow.bodyAsText() shouldNotContain "50000"
         }
 
     @Test
@@ -217,9 +238,9 @@ class CostRoutesTest {
 
             val response = client.get("/api/v1/costs/burn-rate")
             response.status shouldBe HttpStatusCode.OK
-            val body = response.bodyAsText()
-            body shouldContain "\"tokensPerMinute\": 0.0"
-            body shouldContain "\"activeSessions\": 0"
+            val compact = response.bodyAsText().replace("\\s".toRegex(), "")
+            compact shouldContain "\"tokensPerMinute\":0.0"
+            compact shouldContain "\"activeSessions\":0"
         }
 
     @Test
@@ -230,7 +251,7 @@ class CostRoutesTest {
 
             val response = client.get("/api/v1/costs/burn-rate?window=10")
             response.status shouldBe HttpStatusCode.OK
-            val body = response.bodyAsText()
-            body shouldContain "\"windowMinutes\": 10"
+            val compact = response.bodyAsText().replace("\\s".toRegex(), "")
+            compact shouldContain "\"windowMinutes\":10"
         }
 }

@@ -4,8 +4,8 @@
 
 COMMAND="$CLAUDE_TOOL_INPUT_COMMAND"
 
-# Block force-push
-if echo "$COMMAND" | grep -qE "git push --force|git push -f"; then
+# Block force-push (catches: git push --force, git push -f, git push origin main --force, etc.)
+if echo "$COMMAND" | grep -qE "git push.*(--force\b|-f\b)"; then
   echo "ERROR: Force push is not allowed. Use --force-with-lease and confirm with user." >&2
   exit 1
 fi

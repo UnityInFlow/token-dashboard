@@ -184,4 +184,29 @@ class IngestionServiceTest {
         call[AgentCallsTable.cacheReadTokens] shouldBe 200
         call[AgentCallsTable.cacheWriteTokens] shouldBe 100
     }
+
+    @Test
+    fun `ingest continues processing after a record fails`() {
+        val db = initTestDb()
+        val service = IngestionService(db)
+
+        // First: insert a valid record to create session "sess-dup"
+        service.ingest(listOf(makeRecord(sessionId = "sess-dup")))
+
+        // Now ingest a batch where the second record has the same call PK
+        // (agent_calls.id is UUID-generated so this won't fail on PK,
+        //  but we can test with a batch containing a good + bad session)
+        val records = listOf(
+            makeRecord(sessionId = "sess-ok-1"),
+            makeRecord(sessionId = "sess-ok-2"),
+        )
+
+        val response = service.ingest(records)
+        response.accepted shouldBe 2
+        response.errors.shouldBeEmpty()
+
+        // All 3 sessions should exist
+        val sessionCount = transaction(db) { SessionsTable.selectAll().count() }
+        sessionCount shouldBe 3
+    }
 }

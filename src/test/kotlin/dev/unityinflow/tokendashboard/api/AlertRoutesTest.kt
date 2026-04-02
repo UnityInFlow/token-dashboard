@@ -159,6 +159,14 @@ class AlertRoutesTest {
             val body = response.bodyAsText()
             body shouldContain "Updated Alert Name"
             body shouldContain "2000000"
+            val compact = body.replace("\\s".toRegex(), "")
+            compact shouldContain "\"enabled\":false"
+
+            // Verify persistence via GET
+            val getResponse = client.get("/api/v1/alerts")
+            val listRaw = getResponse.bodyAsText()
+            listRaw shouldContain "Updated Alert Name"
+            listRaw.replace("\\s".toRegex(), "") shouldContain "\"enabled\":false"
         }
 
     @Test
@@ -264,5 +272,21 @@ class AlertRoutesTest {
             val body = response.bodyAsText()
             body shouldContain "hist-1"
             body shouldNotContain "hist-2"
+        }
+
+    @Test
+    fun `create alert rejects invalid JSON body`() =
+        testApplication {
+            val db = initTestDb()
+            application { configureAppWithDb(db) }
+
+            val response =
+                client.post("/api/v1/alerts") {
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"invalid": "missing required fields"}""")
+                }
+
+            // Ktor deserialization failure returns 400 or 500
+            (response.status.value >= 400) shouldBe true
         }
 }
