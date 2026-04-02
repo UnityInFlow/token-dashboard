@@ -21,3 +21,6 @@ Thumbs.db
 # Environment
 .env
 .env.local
+
+# Personal reference docs
+claude-code-harness-engineering-guide-v2.md
