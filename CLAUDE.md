@@ -85,6 +85,20 @@ Superpowers skills (TDD, code review, debugging) activate automatically during e
 - `opentelemetry-sdk` — OTLP receiver
 - `ktor-server-html-builder` — server-side HTML rendering
 
+---
+
+## CI / Self-Hosted Runners
+
+Use UnityInFlow org-level self-hosted runners. Never use `ubuntu-latest`.
+
+```yaml
+runs-on: [arc-runner-unityinflow]
+```
+
+Available runners: `hetzner-runner-1/2/3` (X64), `orangepi-runner` (ARM64).
+
+---
+
 ## Do Not
 
 - Do not use a JavaScript framework for the frontend — HTMX only

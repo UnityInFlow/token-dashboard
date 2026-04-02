@@ -78,11 +78,12 @@ class IngestionServiceTest {
         val db = initTestDb()
         val service = IngestionService(db)
 
-        val records = listOf(
-            makeRecord(sessionId = "sess-a", agentId = "agent-1"),
-            makeRecord(sessionId = "sess-b", agentId = "agent-2"),
-            makeRecord(sessionId = "sess-c", agentId = "agent-3"),
-        )
+        val records =
+            listOf(
+                makeRecord(sessionId = "sess-a", agentId = "agent-1"),
+                makeRecord(sessionId = "sess-b", agentId = "agent-2"),
+                makeRecord(sessionId = "sess-c", agentId = "agent-3"),
+            )
 
         val response = service.ingest(records)
         response.accepted shouldBe 3
@@ -140,18 +141,19 @@ class IngestionServiceTest {
         val db = initTestDb()
         val service = IngestionService(db)
 
-        val record = IngestRecord(
-            sessionId = "sess-tool",
-            agentId = "agent-1",
-            agentName = "Test",
-            modelId = "claude-sonnet-4-20250514",
-            calledAt = "2026-04-01T12:00:00",
-            inputTokens = 100,
-            outputTokens = 50,
-            latencyMs = 200,
-            toolName = "Bash",
-            error = "timeout",
-        )
+        val record =
+            IngestRecord(
+                sessionId = "sess-tool",
+                agentId = "agent-1",
+                agentName = "Test",
+                modelId = "claude-sonnet-4-20250514",
+                calledAt = "2026-04-01T12:00:00",
+                inputTokens = 100,
+                outputTokens = 50,
+                latencyMs = 200,
+                toolName = "Bash",
+                error = "timeout",
+            )
 
         service.ingest(listOf(record))
 
@@ -165,18 +167,19 @@ class IngestionServiceTest {
         val db = initTestDb()
         val service = IngestionService(db)
 
-        val record = IngestRecord(
-            sessionId = "sess-cache",
-            agentId = "agent-1",
-            agentName = "Test",
-            modelId = "claude-sonnet-4-20250514",
-            calledAt = "2026-04-01T12:00:00",
-            inputTokens = 1000,
-            outputTokens = 500,
-            cacheReadTokens = 200,
-            cacheWriteTokens = 100,
-            latencyMs = 600,
-        )
+        val record =
+            IngestRecord(
+                sessionId = "sess-cache",
+                agentId = "agent-1",
+                agentName = "Test",
+                modelId = "claude-sonnet-4-20250514",
+                calledAt = "2026-04-01T12:00:00",
+                inputTokens = 1000,
+                outputTokens = 500,
+                cacheReadTokens = 200,
+                cacheWriteTokens = 100,
+                latencyMs = 600,
+            )
 
         service.ingest(listOf(record))
 
@@ -196,10 +199,11 @@ class IngestionServiceTest {
         // Now ingest a batch where the second record has the same call PK
         // (agent_calls.id is UUID-generated so this won't fail on PK,
         //  but we can test with a batch containing a good + bad session)
-        val records = listOf(
-            makeRecord(sessionId = "sess-ok-1"),
-            makeRecord(sessionId = "sess-ok-2"),
-        )
+        val records =
+            listOf(
+                makeRecord(sessionId = "sess-ok-1"),
+                makeRecord(sessionId = "sess-ok-2"),
+            )
 
         val response = service.ingest(records)
         response.accepted shouldBe 2

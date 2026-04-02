@@ -39,10 +39,11 @@ class CostCalculatorExtendedTest {
     fun `calculates correct cost for Opus model`() {
         val db = initTestDb()
         // Opus: 15M input + 75M output per 1M tokens = 90M microdollars = $90
-        val cost = CostCalculator.calculateCostMicros(
-            makeRecord("claude-opus-4-20250514"),
-            db,
-        )
+        val cost =
+            CostCalculator.calculateCostMicros(
+                makeRecord("claude-opus-4-20250514"),
+                db,
+            )
         cost shouldBe 90_000_000
     }
 
@@ -50,20 +51,22 @@ class CostCalculatorExtendedTest {
     fun `calculates correct cost for Haiku model`() {
         val db = initTestDb()
         // Haiku: 0.8M input + 4M output per 1M tokens = 4.8M microdollars = $4.80
-        val cost = CostCalculator.calculateCostMicros(
-            makeRecord("claude-haiku-4-5-20251001"),
-            db,
-        )
+        val cost =
+            CostCalculator.calculateCostMicros(
+                makeRecord("claude-haiku-4-5-20251001"),
+                db,
+            )
         cost shouldBe 4_800_000
     }
 
     @Test
     fun `returns zero cost for zero tokens`() {
         val db = initTestDb()
-        val cost = CostCalculator.calculateCostMicros(
-            makeRecord("claude-sonnet-4-20250514", inputTokens = 0, outputTokens = 0),
-            db,
-        )
+        val cost =
+            CostCalculator.calculateCostMicros(
+                makeRecord("claude-sonnet-4-20250514", inputTokens = 0, outputTokens = 0),
+                db,
+            )
         cost shouldBe 0
     }
 
@@ -83,10 +86,11 @@ class CostCalculatorExtendedTest {
             }
         }
 
-        val cost = CostCalculator.calculateCostMicros(
-            makeRecord("custom-model"),
-            db,
-        )
+        val cost =
+            CostCalculator.calculateCostMicros(
+                makeRecord("custom-model"),
+                db,
+            )
         // 1M input + 2M output = 3M microdollars
         cost shouldBe 3_000_000
     }
@@ -94,13 +98,14 @@ class CostCalculatorExtendedTest {
     @Test
     fun `includes cache costs in total`() {
         val db = initTestDb()
-        val record = makeRecord(
-            "claude-sonnet-4-20250514",
-            inputTokens = 0,
-            outputTokens = 0,
-            cacheReadTokens = 1_000_000,
-            cacheWriteTokens = 1_000_000,
-        )
+        val record =
+            makeRecord(
+                "claude-sonnet-4-20250514",
+                inputTokens = 0,
+                outputTokens = 0,
+                cacheReadTokens = 1_000_000,
+                cacheWriteTokens = 1_000_000,
+            )
 
         val cost = CostCalculator.calculateCostMicros(record, db)
         // Cache read: 300K + Cache write: 3.75M = 4.05M microdollars
@@ -110,13 +115,14 @@ class CostCalculatorExtendedTest {
     @Test
     fun `calculates combined input output and cache costs`() {
         val db = initTestDb()
-        val record = makeRecord(
-            "claude-sonnet-4-20250514",
-            inputTokens = 1_000_000,
-            outputTokens = 1_000_000,
-            cacheReadTokens = 1_000_000,
-            cacheWriteTokens = 1_000_000,
-        )
+        val record =
+            makeRecord(
+                "claude-sonnet-4-20250514",
+                inputTokens = 1_000_000,
+                outputTokens = 1_000_000,
+                cacheReadTokens = 1_000_000,
+                cacheWriteTokens = 1_000_000,
+            )
 
         val cost = CostCalculator.calculateCostMicros(record, db)
         // Input: 3M + Output: 15M + CacheRead: 300K + CacheWrite: 3.75M = 22.05M
@@ -126,11 +132,12 @@ class CostCalculatorExtendedTest {
     @Test
     fun `handles small token counts with integer division`() {
         val db = initTestDb()
-        val record = makeRecord(
-            "claude-sonnet-4-20250514",
-            inputTokens = 100,
-            outputTokens = 50,
-        )
+        val record =
+            makeRecord(
+                "claude-sonnet-4-20250514",
+                inputTokens = 100,
+                outputTokens = 50,
+            )
 
         val cost = CostCalculator.calculateCostMicros(record, db)
         // Sonnet: 100 * 3_000_000 / 1_000_000 = 300 (input)
