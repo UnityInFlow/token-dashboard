@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "preBash": [
+      {
+        "command": ".claude/hooks/pre-bash.sh",
+        "description": "Block dangerous commands (force push, drop DB, prod deploy, server start)"
+      }
+    ]
+  }
+}
