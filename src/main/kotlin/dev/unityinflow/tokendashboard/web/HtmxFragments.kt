@@ -130,7 +130,7 @@ fun Route.htmxFragments(db: Database) {
                     while (rs.next()) {
                         results.add(
                             CostTimeseriesPoint(
-                                timestamp = rs.getString(1)!!,
+                                timestamp = rs.getString(1) ?: "",
                                 costMicros = rs.getLong(2),
                                 callCount = rs.getLong(3),
                             ),
