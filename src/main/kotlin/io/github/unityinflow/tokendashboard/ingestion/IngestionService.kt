@@ -1,8 +1,8 @@
 package io.github.unityinflow.tokendashboard.ingestion
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.unityinflow.tokendashboard.db.tables.AgentCallsTable
 import io.github.unityinflow.tokendashboard.db.tables.SessionsTable
-import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll

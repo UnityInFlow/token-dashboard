@@ -1,7 +1,7 @@
 package io.github.unityinflow.tokendashboard.otlp
 
-import io.github.unityinflow.tokendashboard.ingestion.IngestionService
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.unityinflow.tokendashboard.ingestion.IngestionService
 import io.grpc.stub.StreamObserver
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceResponse

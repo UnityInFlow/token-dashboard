@@ -1,5 +1,6 @@
 package io.github.unityinflow.tokendashboard
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.unityinflow.tokendashboard.api.agentRoutes
 import io.github.unityinflow.tokendashboard.api.alertRoutes
 import io.github.unityinflow.tokendashboard.api.costRoutes
@@ -16,7 +17,6 @@ import io.github.unityinflow.tokendashboard.service.AnomalyDetector
 import io.github.unityinflow.tokendashboard.web.htmxFragments
 import io.github.unityinflow.tokendashboard.web.pageRoutes
 import io.github.unityinflow.tokendashboard.webhook.WebhookDispatcher
-import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.http.HttpHeaders
