@@ -39,7 +39,7 @@ Read these before making architectural or scope decisions.
 - No `var` — always `val`, refactor if mutation seems needed
 - No `!!` without a comment explaining why it's safe
 - `ktlint` before every commit
-- Group: `dev.unityinflow`
+- Group: `io.github.unityinflow`
 
 ### Ktor-specific
 - Ktor is lighter than Spring WebFlux for simple dashboard serving

@@ -5,8 +5,8 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "12.1.2"
 }
 
-group = "dev.unityinflow"
-version = "0.1.0-SNAPSHOT"
+group = "io.github.unityinflow"
+version = "0.1.0"
 
 java {
     toolchain {
@@ -89,7 +89,7 @@ tasks.shadowJar {
     archiveBaseName.set("token-dashboard")
     archiveClassifier.set("all")
     manifest {
-        attributes("Main-Class" to "dev.unityinflow.tokendashboard.ApplicationKt")
+        attributes("Main-Class" to "io.github.unityinflow.tokendashboard.ApplicationKt")
     }
 }
 

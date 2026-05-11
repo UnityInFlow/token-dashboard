@@ -1,0 +1,97 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write    # for creating GH Release
+  packages: write    # for ghcr.io push
+
+jobs:
+  publish:
+    runs-on: [arc-runner-unityinflow]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Lint + build + tests + shadow jar
+        run: ./gradlew clean build shadowJar
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Locate fat jar
+        id: jar
+        run: |
+          jar_path="build/libs/token-dashboard-${{ steps.version.outputs.version }}-all.jar"
+          if [ ! -f "$jar_path" ]; then
+            jar_path=$(ls build/libs/token-dashboard-*-all.jar | head -1)
+          fi
+          echo "path=$jar_path" >> "$GITHUB_OUTPUT"
+          echo "Fat jar at: $jar_path"
+          ls -la "$jar_path"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/unityinflow/token-dashboard:${{ steps.version.outputs.version }}
+            ghcr.io/unityinflow/token-dashboard:latest
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: token-dashboard ${{ github.ref_name }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          files: ${{ steps.jar.outputs.path }}
+          body: |
+            token-dashboard **${{ github.ref_name }}** released.
+
+            ## Run via Docker
+
+            ```bash
+            docker pull ghcr.io/unityinflow/token-dashboard:${{ steps.version.outputs.version }}
+            docker run -p 8080:8080 -p 4317:4317 \
+              ghcr.io/unityinflow/token-dashboard:${{ steps.version.outputs.version }}
+            ```
+
+            Then open http://localhost:8080
+
+            ## Run via fat jar (requires Java 21+)
+
+            Download the attached `token-dashboard-${{ steps.version.outputs.version }}-all.jar` and:
+
+            ```bash
+            java -jar token-dashboard-${{ steps.version.outputs.version }}-all.jar
+            ```
+
+            See the auto-generated notes below for changes since the previous release.
