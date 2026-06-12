@@ -10,7 +10,7 @@ Real-time dashboard for AI agent token consumption: burn rate per agent, cost fo
 
 ## Status
 
-v0.0.1 complete — 99 tests, all features implemented. Pending release tag.
+v0.1.0 released (2026-05-11) — infra release: io.github.unityinflow group rename, fat jar + GHCR Docker publishing. All Phase 1 features shipped in v0.0.1 (99 tests). Phase 2 features target v0.2.0.
 
 ## Reference Documents
 
