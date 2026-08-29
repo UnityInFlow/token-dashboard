@@ -11,7 +11,22 @@ permissions:
 
 jobs:
   build:
-    runs-on: [self-hosted, Linux, X64]
+    # RUNNER POLICY — deliberate, do not "restore" a self-hosted label here.
+    #
+    # This repo is PUBLIC and the org runner group enforces
+    # `allows_public_repositories: false`, so NO self-hosted job can be
+    # scheduled here at all, whatever the trigger. The previous
+    # `[self-hosted, Linux, X64]` label meant this workflow queued until
+    # GitHub cancelled it at the 24-hour timeout: run 27408163186 started
+    # 2026-06-12T09:48:44Z and was cancelled 2026-06-13T09:48:46Z, and no
+    # CI has run since.
+    #
+    # This is the sanctioned D-02 split, already granted to spec-ci-plugin
+    # (July 2026) and injection-scanner (August 2026): public/fork CI runs
+    # on a GitHub-hosted runner, secretless and `contents: read`, while any
+    # secret-bearing or release work stays self-hosted behind triggers a
+    # fork cannot fire. This job builds and tests only — it uses no secrets.
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
